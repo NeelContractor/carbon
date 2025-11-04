@@ -133,6 +133,7 @@
       "accounts": [
         {
           "name": "auction",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -191,93 +192,7 @@
         },
         {
           "name": "industry_ct_account",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "bidder"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "ct_mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "mint_authority",
@@ -306,15 +221,8 @@
           }
         },
         {
-          "name": "escrow_usdc",
-          "writable": true
-        },
-        {
-          "name": "bidder_usdc",
-          "writable": true
-        },
-        {
-          "name": "escrow_authority",
+          "name": "escrow",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -325,17 +233,7 @@
                   99,
                   114,
                   111,
-                  119,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
+                  119
                 ]
               },
               {
@@ -474,20 +372,40 @@
           }
         },
         {
-          "name": "user_usdc",
-          "writable": true
-        },
-        {
           "name": "bond_vault",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "industry_account"
+              }
+            ]
+          }
         },
         {
           "name": "authority",
+          "writable": true,
           "signer": true
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -579,8 +497,8 @@
                   95,
                   97,
                   117,
-                  104,
                   116,
+                  104,
                   111,
                   114,
                   105,
@@ -698,21 +616,32 @@
           }
         },
         {
-          "name": "bidder_usdc",
-          "writable": true
-        },
-        {
-          "name": "escrow_usdc",
-          "writable": true
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "auction"
+              }
+            ]
+          }
         },
         {
           "name": "bidder",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "system_program",
@@ -725,7 +654,7 @@
           "type": "u64"
         },
         {
-          "name": "_timestamp",
+          "name": "timestamp",
           "type": "u64"
         }
       ]
@@ -780,7 +709,7 @@
       ],
       "args": [
         {
-          "name": "comany_name",
+          "name": "company_name",
           "type": "string"
         },
         {
@@ -974,14 +903,7 @@
         },
         {
           "name": "bond_vault",
-          "writable": true
-        },
-        {
-          "name": "user_usdc",
-          "writable": true
-        },
-        {
-          "name": "vault_authority",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -996,29 +918,24 @@
                   97,
                   117,
                   108,
-                  116,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
+                  116
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "industry_account"
               }
             ]
           }
         },
         {
           "name": "authority",
+          "writable": true,
           "signer": true
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -1066,15 +983,8 @@
           }
         },
         {
-          "name": "escrow_usdc",
-          "writable": true
-        },
-        {
-          "name": "treasury_usdc",
-          "writable": true
-        },
-        {
-          "name": "escrow_authority",
+          "name": "escrow",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1085,17 +995,7 @@
                   99,
                   114,
                   111,
-                  119,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
+                  119
                 ]
               },
               {
@@ -1106,12 +1006,16 @@
           }
         },
         {
+          "name": "treasury",
+          "writable": true
+        },
+        {
           "name": "authority",
           "signer": true
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -1175,7 +1079,7 @@
     {
       "code": 6000,
       "name": "InsufficientBond",
-      "msg": "Insufficient bond amount. Minimum 1000 USDC required."
+      "msg": "Insufficient bond amount. Minimum 1 SOL required."
     },
     {
       "code": 6001,
@@ -1190,12 +1094,12 @@
     {
       "code": 6003,
       "name": "InsufficientCT",
-      "msg": "Insufficient CCT balance."
+      "msg": "Insufficient CT balance."
     },
     {
       "code": 6004,
       "name": "NotCompliant",
-      "msg": "Industry is not compiant. Cannot withdraw bond."
+      "msg": "Industry is not compliant. Cannot withdraw bond."
     },
     {
       "code": 6005,
@@ -1250,12 +1154,22 @@
     {
       "code": 6015,
       "name": "BidAlreadyProcessed",
-      "msg": "Bid hash already beed processed."
+      "msg": "Bid has already been processed."
     },
     {
       "code": 6016,
       "name": "HasParticipants",
       "msg": "Cannot cancel auction with participants."
+    },
+    {
+      "code": 6017,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds in account."
+    },
+    {
+      "code": 6018,
+      "name": "InvalidTokenAccount",
+      "msg": "Invalid token account."
     }
   ],
   "types": [
@@ -1499,6 +1413,10 @@
           },
           {
             "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "bond_vault_bump",
             "type": "u8"
           }
         ]

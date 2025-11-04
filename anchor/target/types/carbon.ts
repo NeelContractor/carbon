@@ -139,6 +139,7 @@ export type Carbon = {
       "accounts": [
         {
           "name": "auction",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -197,93 +198,7 @@ export type Carbon = {
         },
         {
           "name": "industryCtAccount",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "bidder"
-              },
-              {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "ctMint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "mintAuthority",
@@ -312,15 +227,8 @@ export type Carbon = {
           }
         },
         {
-          "name": "escrowUsdc",
-          "writable": true
-        },
-        {
-          "name": "bidderUsdc",
-          "writable": true
-        },
-        {
-          "name": "escrowAuthority",
+          "name": "escrow",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -331,17 +239,7 @@ export type Carbon = {
                   99,
                   114,
                   111,
-                  119,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
+                  119
                 ]
               },
               {
@@ -480,20 +378,40 @@ export type Carbon = {
           }
         },
         {
-          "name": "userUsdc",
-          "writable": true
-        },
-        {
           "name": "bondVault",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  110,
+                  100,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "industryAccount"
+              }
+            ]
+          }
         },
         {
           "name": "authority",
+          "writable": true,
           "signer": true
         },
         {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -585,8 +503,8 @@ export type Carbon = {
                   95,
                   97,
                   117,
-                  104,
                   116,
+                  104,
                   111,
                   114,
                   105,
@@ -704,21 +622,32 @@ export type Carbon = {
           }
         },
         {
-          "name": "bidderUsdc",
-          "writable": true
-        },
-        {
-          "name": "escrowUsdc",
-          "writable": true
+          "name": "escrow",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "auction"
+              }
+            ]
+          }
         },
         {
           "name": "bidder",
           "writable": true,
           "signer": true
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "systemProgram",
@@ -786,7 +715,7 @@ export type Carbon = {
       ],
       "args": [
         {
-          "name": "comanyName",
+          "name": "companyName",
           "type": "string"
         },
         {
@@ -980,14 +909,7 @@ export type Carbon = {
         },
         {
           "name": "bondVault",
-          "writable": true
-        },
-        {
-          "name": "userUsdc",
-          "writable": true
-        },
-        {
-          "name": "vaultAuthority",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1002,29 +924,24 @@ export type Carbon = {
                   97,
                   117,
                   108,
-                  116,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
+                  116
                 ]
+              },
+              {
+                "kind": "account",
+                "path": "industryAccount"
               }
             ]
           }
         },
         {
           "name": "authority",
+          "writable": true,
           "signer": true
         },
         {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -1072,15 +989,8 @@ export type Carbon = {
           }
         },
         {
-          "name": "escrowUsdc",
-          "writable": true
-        },
-        {
-          "name": "treasuryUsdc",
-          "writable": true
-        },
-        {
-          "name": "escrowAuthority",
+          "name": "escrow",
+          "writable": true,
           "pda": {
             "seeds": [
               {
@@ -1091,17 +1001,7 @@ export type Carbon = {
                   99,
                   114,
                   111,
-                  119,
-                  95,
-                  97,
-                  117,
-                  116,
-                  104,
-                  111,
-                  114,
-                  105,
-                  116,
-                  121
+                  119
                 ]
               },
               {
@@ -1112,12 +1012,16 @@ export type Carbon = {
           }
         },
         {
+          "name": "treasury",
+          "writable": true
+        },
+        {
           "name": "authority",
           "signer": true
         },
         {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
@@ -1181,7 +1085,7 @@ export type Carbon = {
     {
       "code": 6000,
       "name": "insufficientBond",
-      "msg": "Insufficient bond amount. Minimum 1000 USDC required."
+      "msg": "Insufficient bond amount. Minimum 1 SOL required."
     },
     {
       "code": 6001,
@@ -1196,12 +1100,12 @@ export type Carbon = {
     {
       "code": 6003,
       "name": "insufficientCt",
-      "msg": "Insufficient CCT balance."
+      "msg": "Insufficient CT balance."
     },
     {
       "code": 6004,
       "name": "notCompliant",
-      "msg": "Industry is not compiant. Cannot withdraw bond."
+      "msg": "Industry is not compliant. Cannot withdraw bond."
     },
     {
       "code": 6005,
@@ -1256,12 +1160,22 @@ export type Carbon = {
     {
       "code": 6015,
       "name": "bidAlreadyProcessed",
-      "msg": "Bid hash already beed processed."
+      "msg": "Bid has already been processed."
     },
     {
       "code": 6016,
       "name": "hasParticipants",
       "msg": "Cannot cancel auction with participants."
+    },
+    {
+      "code": 6017,
+      "name": "insufficientFunds",
+      "msg": "Insufficient funds in account."
+    },
+    {
+      "code": 6018,
+      "name": "invalidTokenAccount",
+      "msg": "Invalid token account."
     }
   ],
   "types": [
@@ -1505,6 +1419,10 @@ export type Carbon = {
           },
           {
             "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "bondVaultBump",
             "type": "u8"
           }
         ]

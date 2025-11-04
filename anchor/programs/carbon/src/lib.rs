@@ -31,6 +31,8 @@ pub mod carbon {
         industry.compliance_status = ComplianceStatus::Pending;
         industry.created_at = Clock::get()?.unix_timestamp;
         industry.bump = ctx.bumps.industry_account;
+        // Initialize bond_vault_bump to 0, will be set on first deposit
+        industry.bond_vault_bump = 0;
 
         Ok(())
     }
@@ -49,6 +51,11 @@ pub mod carbon {
         let industry = &mut ctx.accounts.industry_account;
 
         require!(industry.verified, CarbonError::NotVerified);
+
+        // Save the bond vault bump on first deposit
+        if industry.bond_vault_bump == 0 {
+            industry.bond_vault_bump = ctx.bumps.bond_vault;
+        }
 
         system_program::transfer(
             CpiContext::new(
@@ -121,8 +128,26 @@ pub mod carbon {
 
         require!(available_balance >= amount, CarbonError::InsufficientBond);
 
-        **ctx.accounts.bond_vault.try_borrow_mut_lamports()? -= amount;
-        **ctx.accounts.authority.try_borrow_mut_lamports()? += amount;
+        // Use industry_account.key() as seed, not authority
+        let industry_account_key = industry.key();
+        let bump = industry.bond_vault_bump;
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            b"bond_vault",
+            industry_account_key.as_ref(),
+            &[bump],
+        ]];
+
+        system_program::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.bond_vault.to_account_info(),
+                    to: ctx.accounts.authority.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            amount,
+        )?;
 
         industry.bond_amount -= amount;
         Ok(())
@@ -156,7 +181,7 @@ pub mod carbon {
     pub fn place_bid(
         ctx: Context<PlaceBid>,
         token_amount: u64,
-        _timestamp: u64
+        timestamp: u64
     ) -> Result<()> {
         let auction = &mut ctx.accounts.auction;
         let bid = &mut ctx.accounts.bid;
@@ -179,9 +204,12 @@ pub mod carbon {
 
         auction.current_price = current_price;
 
-        let total_cost = token_amount
-            .checked_mul(current_price)
-            .ok_or(CarbonError::MathOverflow)?;
+        // FIXED: Divide by 1e9 since token_amount includes decimals
+        let total_cost = (token_amount as u128)
+            .checked_mul(current_price as u128)
+            .ok_or(CarbonError::MathOverflow)?
+            .checked_div(1_000_000_000)
+            .ok_or(CarbonError::MathOverflow)? as u64;
 
         system_program::transfer(
             CpiContext::new(
@@ -200,12 +228,12 @@ pub mod carbon {
         bid.token_amount = token_amount;
         bid.price_per_token = current_price;
         bid.total_cost = total_cost;
-        bid.timestamp = clock.unix_timestamp;
+        bid.timestamp = timestamp as i64;
         bid.status = BidStatus::Pending;
 
         auction.tokens_remaining -= token_amount;
         auction.total_raised += total_cost;
-        auction.participant_count += 1;
+        auction.participant_count += 1; 
 
         if auction.tokens_remaining == 0 {
             auction.status = AuctionStatus::Completed;
@@ -233,6 +261,7 @@ pub mod carbon {
             auction.reserve_price
         };
 
+        auction.tokens_sold = auction.total_tokens - auction.tokens_remaining;
         auction.status = AuctionStatus::Finalized;
         auction.current_price = clearing_price;
 
@@ -240,7 +269,7 @@ pub mod carbon {
     }
 
     pub fn claim_tokens(ctx: Context<ClaimTokens>) -> Result<()> {
-        let auction = &ctx.accounts.auction;
+        let auction = &mut ctx.accounts.auction;
         let bid = &mut ctx.accounts.bid;
         let industry = &mut ctx.accounts.industry_account;
 
@@ -248,9 +277,11 @@ pub mod carbon {
         require!(bid.status == BidStatus::Pending, CarbonError::BidAlreadyProcessed);
 
         let clearing_price = auction.current_price;
-        let final_cost = bid.token_amount
-            .checked_mul(clearing_price)
-            .ok_or(CarbonError::MathOverflow)?;
+        let final_cost = (bid.token_amount as u128)
+            .checked_mul(clearing_price as u128)
+            .ok_or(CarbonError::MathOverflow)?
+            .checked_div(1_000_000_000) // Divide by 10^9 for token decimals
+            .ok_or(CarbonError::MathOverflow)? as u64;
         
         let refund_amount = bid.total_cost
             .checked_sub(final_cost)
@@ -264,8 +295,24 @@ pub mod carbon {
 
             require!(available_balance >= refund_amount, CarbonError::InsufficientFunds);
 
-            **ctx.accounts.escrow.try_borrow_mut_lamports()? -= refund_amount;
-            **ctx.accounts.bidder.try_borrow_mut_lamports()? += refund_amount;
+            let auction_key = auction.key();
+            let signer_seeds: &[&[&[u8]]] = &[&[
+                b"escrow",
+                auction_key.as_ref(),
+                &[ctx.bumps.escrow],
+            ]];
+
+            system_program::transfer(
+                CpiContext::new_with_signer(
+                    ctx.accounts.system_program.to_account_info(), 
+                    system_program::Transfer { 
+                        from: ctx.accounts.escrow.to_account_info(), 
+                        to: ctx.accounts.bidder.to_account_info(),
+                    }, 
+                    signer_seeds
+                ), 
+                refund_amount
+            )?;
         }
 
         let mint_seeds: &[&[u8]] = &[
@@ -318,8 +365,24 @@ pub mod carbon {
 
         require!(escrow_balance > 0, CarbonError::InsufficientFunds);
 
-        **ctx.accounts.escrow.try_borrow_mut_lamports()? -= escrow_balance;
-        **ctx.accounts.treasury.try_borrow_mut_lamports()? += escrow_balance;
+        let auction_key = auction.key();
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            b"escrow",
+            auction_key.as_ref(),
+            &[ctx.bumps.escrow],
+        ]];
+
+        system_program::transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.system_program.to_account_info(),
+                system_program::Transfer {
+                    from: ctx.accounts.escrow.to_account_info(),
+                    to: ctx.accounts.treasury.to_account_info(),
+                },
+                signer_seeds,
+            ),
+            escrow_balance,
+        )?;
 
         Ok(())
     }
@@ -391,7 +454,6 @@ pub struct RegisterIndustry<'info> {
 
 #[derive(Accounts)]
 pub struct VerifyIndustry<'info> {
-    /// CHECK: Admin Authority
     pub admin: Signer<'info>,
 
     #[account(
@@ -412,7 +474,11 @@ pub struct DepositBond<'info> {
     pub industry_account: Account<'info, IndustryAccount>,
     
     /// CHECK: Bond vault - system account to hold SOL
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"bond_vault", industry_account.key().as_ref()],
+        bump,
+    )]
     pub bond_vault: SystemAccount<'info>,
 
     #[account(mut)]
@@ -426,13 +492,17 @@ pub struct BurnCT<'info> {
         mut,
         seeds = [b"industry", authority.key().as_ref()],
         bump = industry_account.bump,
+        constraint = industry_account.authority == authority.key() 
     )]
     pub industry_account: Account<'info, IndustryAccount>,
 
     #[account(mut)]
     pub ct_mint: Account<'info, Mint>,
     
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = industry_ct_account.owner == authority.key()
+    )]
     pub industry_ct_account: Account<'info, TokenAccount>,
 
     pub authority: Signer<'info>,
@@ -440,7 +510,7 @@ pub struct BurnCT<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(timestamp: u64)]
+#[instruction(co2_emitted: u64, report_period: String, timestamp: u64)]
 pub struct SubmitEmissionReport<'info> {
     #[account(
         mut,
@@ -469,11 +539,16 @@ pub struct WithdrawBond<'info> {
         mut,
         seeds = [b"industry", authority.key().as_ref()],
         bump = industry_account.bump,
+        constraint = industry_account.authority == authority.key()
     )]
     pub industry_account: Account<'info, IndustryAccount>,
 
     /// CHECK: Bond vault - system account holding SOL
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"bond_vault", industry_account.key().as_ref()],
+        bump = industry_account.bond_vault_bump,
+    )]
     pub bond_vault: SystemAccount<'info>,
 
     #[account(mut)]
@@ -500,7 +575,7 @@ pub struct CreateAuction<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(timestamp: u64)]
+#[instruction(token_amount: u64, timestamp: u64)]
 pub struct PlaceBid<'info> {
     #[account(
         mut,
@@ -560,12 +635,16 @@ pub struct FinalizeAuction<'info> {
 #[derive(Accounts)]
 pub struct ClaimTokens<'info> {
     #[account(
+        mut,
         seeds = [b"auction", &auction.batch_number.to_le_bytes()],
         bump,
     )]
     pub auction: Account<'info, Auction>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = bid.bidder == bidder.key()
+    )]
     pub bid: Account<'info, Bid>,
 
     #[account(
@@ -579,10 +658,9 @@ pub struct ClaimTokens<'info> {
     pub ct_mint: Account<'info, Mint>,
 
     #[account(
-        init_if_needed,
-        payer = bidder,
-        associated_token::mint = ct_mint,
-        associated_token::authority = bidder,
+        mut,
+        constraint = industry_ct_account.mint == ct_mint.key() @ CarbonError::InvalidTokenAccount,
+        constraint = industry_ct_account.owner == industry_account.authority @ CarbonError::InvalidTokenAccount,
     )]
     pub industry_ct_account: Account<'info, TokenAccount>,
 
@@ -661,7 +739,8 @@ pub struct IndustryAccount {
     pub total_burned: u64,
     pub compliance_status: ComplianceStatus,
     pub created_at: i64,
-    pub bump: u8
+    pub bump: u8,
+    pub bond_vault_bump: u8,
 }
 
 #[account]
@@ -767,4 +846,6 @@ pub enum CarbonError {
     HasParticipants,
     #[msg("Insufficient funds in account.")]
     InsufficientFunds,
+    #[msg("Invalid token account.")]
+    InvalidTokenAccount,
 }
