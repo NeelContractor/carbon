@@ -608,10 +608,10 @@ export function useCarbonProgram() {
   }
 }
 
-export function useCarbonProgramAccount({ account }: { account: PublicKey }) {
-  const { cluster } = useCluster()
-  const transactionToast = useTransactionToast()
-  const { program, auctionAccounts, bidAccounts, emissionReportAccounts, industryAccounts } = useCarbonProgram()
+// export function useCarbonProgramAccount({ account }: { account: PublicKey }) {
+  // const { cluster } = useCluster()
+  // const transactionToast = useTransactionToast()
+  // const { program, auctionAccounts, bidAccounts, emissionReportAccounts, industryAccounts } = useCarbonProgram()
 
   // const accountQuery = useQuery({
   //   queryKey: ['counter', 'fetch', { cluster, account }],
@@ -661,4 +661,4 @@ export function useCarbonProgramAccount({ account }: { account: PublicKey }) {
   //   incrementMutation,
   //   setMutation,
   // }
-}
+// }
